@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>Experiência Digital Privada — Ana</title>
+  <meta name="description" content="Experiência Digital Privada para Ana." />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #050505;
+      --bg-soft: #0b0b0c;
+      --panel: rgba(255,255,255,0.06);
+      --panel-strong: rgba(255,255,255,0.1);
+      --line: rgba(255,255,255,0.12);
+      --line-strong: rgba(255,255,255,0.22);
+      --text: #f5f2ec;
+      --muted: #b7b1a9;
+      --faint: #8b8680;
+      --accent: #d7c3a3;
+      --accent-2: #f3e7d2;
+      --success: #d6cbb8;
+      --shadow: 0 20px 60px rgba(0,0,0,.45);
+      --radius: 24px;
+      --radius-sm: 18px;
+      --transition: 700ms cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    * { box-sizing: border-box; }
+    html, body { margin:0; min-height:100%; }
+    body {
+      font-family: 'Inter', sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at 10% 20%, rgba(255,255,255,.06), transparent 28%),
+        radial-gradient(circle at 90% 10%, rgba(215,195,163,.08), transparent 22%),
+        linear-gradient(180deg, #090909 0%, #050505 45%, #0d0d0e 100%);
+      overflow-x: hidden;
+    }
+    .noise, .aurora, canvas#particles { position: fixed; inset: 0; pointer-events: none; }
+    .noise {
+      opacity: .035;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160' viewBox='0 0 160 160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)' opacity='.7'/%3E%3C/svg%3E");
+    }
+    .aurora {
+      background:
+        radial-gradient(circle at var(--mx,50%) var(--my,50%), rgba(215,195,163,.08), transparent 18%),
+        radial-gradient(circle at 80% 85%, rgba(255,255,255,.05), transparent 25%);
+      transition: background .25s linear;
+    }
+    .app {
+      position: relative;
+      min-height: 100dvh;
+      display: grid;
+      place-items: center;
+      padding: 24px;
+      isolation: isolate;
+    }
+    .shell {
+      width: min(1180px, 100%);
+      min-height: min(880px, calc(100dvh - 48px));
+      border: 1px solid var(--line);
+      background: linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.03));
+      backdrop-filter: blur(24px) saturate(130%);
+      -webkit-backdrop-filter: blur(24px) saturate(130%);
+      border-radius: 32px;
+      overflow: clip;
+      box-shadow: var(--shadow);
+      position: relative;
+    }
+    .topbar {
+      display:flex; align-items:center; justify-content:space-between;
+      padding: 18px 22px;
+      border-bottom: 1px solid var(--line);
+      background: rgba(255,255,255,0.03);
+    }
+    .brand {
+      display:flex; align-items:center; gap:14px; letter-spacing:.14em; text-transform:uppercase;
+      font-size:12px; color: var(--muted);
+    }
+    .logo {
+      width: 42px; height: 42px; border-radius: 14px; display:grid; place-items:center;
+      border:1px solid var(--line-strong);
+      background: linear-gradient(145deg, rgba(255,255,255,.14), rgba(255,255,255,.04));
+    }
+    .logo svg { width: 23px; height: 23px; }
+    .status-pill {
+      padding: 10px 14px; border-radius: 999px; font-size: 12px; color: var(--accent-2);
+      border: 1px solid rgba(215,195,163,.25); background: rgba(215,195,163,.08);
+    }
+    .screen { min-height: calc(100% - 79px); display:none; }
+    .screen.active { display:block; animation: rise .9s var(--transition); }
+    @keyframes rise { from { opacity:0; transform: translateY(20px) scale(.985);} to {opacity:1; transform:none;} }
+    .login-wrap { min-height: calc(100dvh - 150px); display:grid; place-items:center; padding: 28px; }
+    .login-card {
+      width:min(520px,100%); padding: 34px; border-radius: var(--radius);
+      border:1px solid var(--line);
+      background: linear-gradient(180deg, rgba(255,255,255,.09), rgba(255,255,255,.04));
+      box-shadow: 0 18px 48px rgba(0,0,0,.34);
+    }
+    .eyebrow { color:var(--muted); font-size:12px; letter-spacing:.2em; text-transform:uppercase; margin-bottom:14px; }
+    h1, h2, h3 { margin:0; font-family:'Playfair Display', serif; font-weight:700; }
+    h1 { font-size: clamp(36px, 5vw, 64px); line-height: .94; letter-spacing:-.03em; max-width: 10ch; }
+    .lead { color: var(--muted); margin: 18px 0 28px; line-height:1.7; max-width: 46ch; }
+    .grid { display:grid; gap:16px; }
+    .field label { display:block; font-size:12px; letter-spacing:.18em; text-transform:uppercase; color:var(--muted); margin-bottom:10px; }
+    .field input {
+      width:100%; height:56px; border-radius: 18px; border:1px solid var(--line);
+      background: rgba(255,255,255,.04); color:var(--text); padding:0 18px; outline:none;
+      transition: border-color .3s ease, background .3s ease, box-shadow .3s ease;
+    }
+    .field input::placeholder { color:#7d7872; }
+    .field input:focus { border-color: rgba(215,195,163,.55); box-shadow: 0 0 0 4px rgba(215,195,163,.09); background: rgba(255,255,255,.06); }
+    .button-row { display:flex; gap:12px; align-items:center; margin-top: 8px; }
+    .btn {
+      min-height: 54px; padding: 0 22px; border-radius: 18px; border:1px solid rgba(215,195,163,.22);
+      background: linear-gradient(180deg, rgba(215,195,163,.18), rgba(215,195,163,.08)); color: var(--accent-2);
+      font-weight: 600; letter-spacing:.04em; transition: transform .35s ease, box-shadow .35s ease, border-color .35s ease;
+    }
+    .btn:hover { transform: translateY(-1px); box-shadow: 0 16px 28px rgba(0,0,0,.22); border-color: rgba(215,195,163,.38); }
+    .btn:active { transform: translateY(0); }
+    .message { min-height: 22px; font-size: 14px; color: #f0c9c9; margin-top: 10px; }
+    .loader {
+      margin-top: 18px; padding: 18px; border-radius: 18px; border:1px solid var(--line); background: rgba(255,255,255,.04);
+      display:none;
+    }
+    .loader.active { display:block; }
+    .loader-text { color: var(--accent-2); font-size: 14px; margin-bottom: 12px; }
+    .bar { height: 9px; border-radius: 999px; background: rgba(255,255,255,.06); overflow:hidden; }
+    .bar > span {
+      display:block; height:100%; width:0%; border-radius:999px;
+      background: linear-gradient(90deg, rgba(215,195,163,.35), rgba(243,231,210,.95), rgba(215,195,163,.42));
+      box-shadow: 0 0 22px rgba(243,231,210,.35);
+      transition: width 2.4s cubic-bezier(.19,1,.22,1);
+    }
+    .dashboard { padding: 28px; }
+    .hero { display:grid; grid-template-columns: 1.15fr .85fr; gap: 22px; align-items: stretch; }
+    .panel {
+      border:1px solid var(--line);
+      background: linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.04));
+      border-radius: 28px; padding: 24px; position: relative; overflow:hidden;
+    }
+    .panel::after {
+      content:""; position:absolute; inset:auto -20% -40% auto; width:220px; height:220px; border-radius:50%;
+      background: radial-gradient(circle, rgba(215,195,163,.18), transparent 66%); filter: blur(6px);
+      pointer-events:none;
+    }
+    .hero-copy p { color: var(--muted); line-height: 1.85; font-size: 15.5px; }
+    .quote { margin-top: 16px; padding-top: 16px; border-top:1px solid var(--line); color:var(--accent-2); }
+    .kpi-grid { display:grid; gap: 14px; }
+    .kpi {
+      min-height: 148px; display:flex; flex-direction:column; justify-content:space-between;
+      border-radius: 24px; padding: 18px; border:1px solid var(--line);
+      background: linear-gradient(180deg, rgba(255,255,255,.07), rgba(255,255,255,.03));
+    }
+    .kpi small { font-size: 12px; letter-spacing:.18em; text-transform:uppercase; color: var(--muted); }
+    .kpi strong { font-size: clamp(28px, 3.4vw, 42px); line-height:1; font-family:'Playfair Display', serif; }
+    .kpi span { color: var(--faint); font-size: 13px; }
+    .section-title { display:flex; align-items:end; justify-content:space-between; gap:16px; margin: 22px 2px 14px; }
+    .section-title p { color: var(--muted); max-width: 55ch; }
+    .gallery { display:grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+    .art {
+      position:relative; min-height: 290px; border-radius: 24px; overflow:hidden; border:1px solid var(--line);
+      transform: translateZ(0);
+      transition: transform .6s var(--transition), box-shadow .6s var(--transition), border-color .6s var(--transition), filter .6s var(--transition);
+      box-shadow: 0 12px 34px rgba(0,0,0,.24);
+    }
+    .art.image-1 {
+      background: linear-gradient(180deg, rgba(255,255,255,.02), rgba(255,255,255,.01)), url('https://i.ibb.co/Z18yjRCM/5ee5e811-8d11-49e7-976a-1d95d7837615.jpg') center/cover no-repeat;
+    }
+    .art.image-2 {
+      background: linear-gradient(180deg, rgba(255,255,255,.02), rgba(255,255,255,.01)), url('https://i.ibb.co/JFbWt0Yt/4cc7a234-23aa-47b4-a569-ea8e45103fa6.jpg') center/cover no-repeat;
+    }
+    .art.image-3 {
+      background: linear-gradient(180deg, rgba(255,255,255,.02), rgba(255,255,255,.01)), url('https://i.ibb.co/6JPZzHQp/f3b845c1-26e8-4989-8a9d-f2eb9655ef99.jpg') center/cover no-repeat;
+    }
+    .art.image-4 {
+      background: linear-gradient(180deg, rgba(255,255,255,.02), rgba(255,255,255,.01)), url('https://i.ibb.co/Vc3d7CRk/7d27303e-6a77-4846-bfab-8905f3c33aab.jpg') center/cover no-repeat;
+    }
+    .art::before { content:""; position:absolute; inset:0; background: linear-gradient(180deg, transparent 40%, rgba(0,0,0,.55) 100%); }
+    .art::after {
+      content:""; position:absolute; inset:-20% -20% auto auto; width:180px; height:180px; border-radius:50%;
+      background: radial-gradient(circle, rgba(255,255,255,.12), transparent 58%);
+      opacity:0; transition: opacity .6s ease;
+    }
+    .art:hover { transform: translateY(-6px) scale(1.02); border-color: rgba(215,195,163,.38); box-shadow: 0 24px 60px rgba(0,0,0,.36); filter: saturate(1.08) contrast(1.04); }
+    .art:hover::after { opacity: 1; }
+    .caption {
+      position:absolute; left:16px; right:16px; bottom:16px; z-index:1;
+      display:flex; justify-content:space-between; align-items:end; gap:14px;
+    }
+    .caption h3 { font-size: 22px; }
+    .caption p { margin: 6px 0 0; color: #d2cbc1; font-size: 13px; line-height:1.5; }
+    .chip {
+      padding: 8px 10px; border-radius: 999px; border:1px solid rgba(255,255,255,.14);
+      background: rgba(255,255,255,.08); color: var(--accent-2); font-size: 11px; letter-spacing:.16em; text-transform:uppercase; white-space:nowrap;
+    }
+    .footer-note { margin-top: 20px; color: var(--faint); font-size: 13px; text-align:center; }
+    @media (max-width: 980px) {
+      .hero { grid-template-columns: 1fr; }
+      .gallery { grid-template-columns: repeat(2, 1fr); }
+      .shell { min-height: auto; }
+    }
+    @media (max-width: 640px) {
+      .app { padding: 12px; }
+      .topbar { padding: 14px 16px; }
+      .login-card, .dashboard, .panel { padding: 18px; }
+      .gallery { grid-template-columns: 1fr; }
+      .art { min-height: 360px; }
+      .status-pill { display:none; }
+      h1 { max-width: 9ch; }
+    }
+  </style>
+</head>
+<body>
+  <canvas id="particles"></canvas>
+  <div class="aurora"></div>
+  <div class="noise"></div>
+  <div class="app">
+    <div class="shell">
+      <header class="topbar">
+        <div class="brand">
+          <div class="logo" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path d="M12 4c2.5-3 8-1.5 8 3.2 0 5.8-8 10.8-8 10.8S4 13 4 7.2C4 2.5 9.5 1 12 4Z" />
+            </svg>
+          </div>
+          <div>
+            <div>Experiência Digital Privada</div>
+            <div style="letter-spacing:.08em; text-transform:none; font-size:11px; margin-top:4px; color:var(--faint);">Ana Edition</div>
+          </div>
+        </div>
+        <div class="status-pill">Confidencial • Camada Executiva</div>
+      </header>
+      <section class="screen active" id="loginScreen">
+        <div class="login-wrap">
+          <div class="login-card">
+            <div class="eyebrow">Protocolo de acesso</div>
+            <h1>Acesso reservado ao ativo mais valioso.</h1>
+            <p class="lead">Uma interface privada desenhada para celebrar uma parceria rara: discreta, refinada e impossível de replicar. Insira as credenciais corretas para acessar a base de dados emocional mais estratégica desta operação.</p>
+            <div class="grid">
+              <div class="field">
+                <label for="usuario">Usuário</label>
+                <input id="usuario" type="text" placeholder="Amor Por Ana" autocomplete="off" />
+              </div>
+              <div class="field">
+                <label for="senha">Senha</label>
+                <input id="senha" type="password" placeholder="Amor Por Ana" autocomplete="off" />
+              </div>
+            </div>
+            <div class="button-row"><button class="btn" id="authBtn">Autenticar</button></div>
+            <div class="loader" id="loader">
+              <div class="loader-text" id="loaderText">Criptografando Sentimentos...</div>
+              <div class="bar"><span id="progress"></span></div>
+            </div>
+            <div class="message" id="message"></div>
+          </div>
+        </div>
+      </section>
+      <section class="screen" id="dashboardScreen">
+        <div class="dashboard">
+          <div class="hero">
+            <article class="panel hero-copy">
+              <div class="eyebrow">Dashboard estratégico</div>
+              <h2 style="font-size: clamp(32px, 4vw, 54px); line-height: .98; margin-bottom: 18px; max-width: 12ch;">O Nosso Infinito Particular</h2>
+              <p>Às vezes, eu me pego apenas observando o mundo lá fora e percebo como tudo parece correr em uma velocidade frenética. Mas, quando meus pensamentos pousam em você, o tempo simplesmente decide parar. É como se o universo fizesse silêncio apenas para eu conseguir escutar o som da sua voz na minha memória e sentir o calor da sua presença, mesmo quando não estamos juntos.</p>
+              <p>Amar você não é apenas um sentimento; é um estado de paz que eu nunca achei que encontraria. Antes de nós, o amor era uma palavra bonita em livros e músicas, uma ideia abstrata. Com você, o amor ganhou rosto, cheiro, voz e um abraço que parece o único lugar no mundo onde eu realmente pertenço. Você não é apenas a pessoa com quem eu divido os meus dias; você é a pessoa com quem eu quero construir cada segundo do meu futuro.</p>
+              <p>O que temos é raro. É a conexão que vai além das palavras, aquele olhar que diz tudo quando o cansaço aperta, e aquele sorriso que ilumina até os meus dias mais cinzentos. Eu amo a forma como a gente se encaixa, como as nossas risadas se misturam e como até o silêncio ao seu lado é confortável. Com você, eu aprendi que o amor está nos grandes gestos, mas vive, de verdade, nos detalhes: no "bom dia" carinhoso, na preocupação mútua, no apoio incondicional e na vontade de ser alguém melhor só para te ver orgulhosa.</p>
+              <p>Eu prometo estar aqui para celebrar suas vitórias como se fossem minhas e para segurar sua mão quando o caminho parecer íngreme demais. Quero ser seu porto seguro, sua alegria inesperada e a certeza de que, não importa o que aconteça lá fora, aqui dentro o nosso amor será sempre um abrigo inabalável.</p>
+              <p>Você é o meu capítulo favorito, a minha melhor escolha e o meu destino mais bonito. O que eu sinto por você é um fogo que não consome, mas que aquece a alma e me faz sentir mais vivo do que nunca. Obrigado por ser exatamente quem você é e por me permitir caminhar ao seu lado.</p>
+              <p class="quote">Eu amo você, hoje, amanhã e em cada detalhe do nosso "sempre".</p>
+            </article>
+            <aside class="kpi-grid">
+              <div class="kpi"><small>Lealdade e Suporte</small><strong>100%</strong><span>Performance estável, excelência contínua.</span></div>
+              <div class="kpi"><small>Tempo de Conexão</small><strong id="connectionCounter">40 dias</strong><span>Acumulado oficial da operação afetiva.</span></div>
+              <div class="kpi"><small>ROI Emocional</small><strong>Infinito</strong><span>Retorno sem teto, risco emocional desejável.</span></div>
+            </aside>
+          </div>
+          <div class="section-title">
+            <div>
+              <div class="eyebrow">Galeria de arte</div>
+              <h2 style="font-size: clamp(28px, 3vw, 40px);">Memórias em curadoria privada.</h2>
+            </div>
+            <p>Uma seleção visual com acabamento editorial, hover responsivo e quatro imagens reais já integradas à experiência privada.</p>
+          </div>
+          <div class="gallery">
+            <figure class="art image-1"><figcaption class="caption"><div><h3>Arquivo 01</h3><p>Primeira imagem validada e integrada à coleção principal.</p></div><div class="chip">Live</div></figcaption></figure>
+            <figure class="art image-2"><figcaption class="caption"><div><h3>Arquivo 02</h3><p>Segunda imagem integrada à curadoria privada.</p></div><div class="chip">Live</div></figcaption></figure>
+            <figure class="art image-3"><figcaption class="caption"><div><h3>Arquivo 03</h3><p>Terceira imagem ativada com presença editorial.</p></div><div class="chip">Live</div></figcaption></figure>
+            <figure class="art image-4"><figcaption class="caption"><div><h3>Arquivo 04</h3><p>Quarta imagem concluindo a coleção exclusiva.</p></div><div class="chip">Live</div></figcaption></figure>
+          </div>
+          <div class="footer-note">Credenciais válidas: “Amor Por Ana” em USUÁRIO e SENHA.</div>
+        </div>
+      </section>
+    </div>
+  </div>
+  <script>
+    const VALID = 'Amor Por Ana';
+    const loginScreen = document.getElementById('loginScreen');
+    const dashboardScreen = document.getElementById('dashboardScreen');
+    const authBtn = document.getElementById('authBtn');
+    const loader = document.getElementById('loader');
+    const loaderText = document.getElementById('loaderText');
+    const progress = document.getElementById('progress');
+    const message = document.getElementById('message');
+    const usuario = document.getElementById('usuario');
+    const senha = document.getElementById('senha');
+    const connectionCounter = document.getElementById('connectionCounter');
+    connectionCounter.textContent = '40 dias';
+    function authenticate() {
+      const user = usuario.value.trim();
+      const pass = senha.value.trim();
+      message.textContent = '';
+      if (user !== VALID || pass !== VALID) {
+        loader.classList.remove('active');
+        progress.style.width = '0%';
+        message.textContent = 'Credenciais inválidas. Utilize “Amor Por Ana” nos dois campos.';
+        return;
+      }
+      const phrases = ['Criptografando Sentimentos...', 'Acessando Base de Dados Privada...'];
+      loaderText.textContent = phrases[Math.floor(Math.random() * phrases.length)];
+      loader.classList.add('active');
+      requestAnimationFrame(() => progress.style.width = '100%');
+      setTimeout(() => {
+        loginScreen.classList.remove('active');
+        dashboardScreen.classList.add('active');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }, 2400);
+    }
+    authBtn.addEventListener('click', authenticate);
+    [usuario, senha].forEach(el => el.addEventListener('keydown', e => { if (e.key === 'Enter') authenticate(); }));
+    window.addEventListener('pointermove', e => {
+      const x = (e.clientX / window.innerWidth) * 100;
+      const y = (e.clientY / window.innerHeight) * 100;
+      document.documentElement.style.setProperty('--mx', x + '%');
+      document.documentElement.style.setProperty('--my', y + '%');
+    });
+    const canvas = document.getElementById('particles');
+    const ctx = canvas.getContext('2d');
+    let particles = [];
+    let pointer = { x: window.innerWidth / 2, y: window.innerHeight / 2 };
+    function resizeCanvas() {
+      canvas.width = window.innerWidth * devicePixelRatio;
+      canvas.height = window.innerHeight * devicePixelRatio;
+      canvas.style.width = window.innerWidth + 'px';
+      canvas.style.height = window.innerHeight + 'px';
+      ctx.setTransform(devicePixelRatio, 0, 0, devicePixelRatio, 0, 0);
+      particles = Array.from({ length: Math.min(52, Math.floor(window.innerWidth / 22)) }, () => ({ x: Math.random() * window.innerWidth, y: Math.random() * window.innerHeight, vx: (Math.random() - .5) * .22, vy: (Math.random() - .5) * .22, r: Math.random() * 1.7 + .4 }));
+    }
+    function animateParticles() {
+      ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
+      for (const p of particles) {
+        const dx = pointer.x - p.x;
+        const dy = pointer.y - p.y;
+        const dist = Math.hypot(dx, dy) || 1;
+        if (dist < 180) { p.vx += (dx / dist) * 0.002; p.vy += (dy / dist) * 0.002; }
+        p.x += p.vx; p.y += p.vy; p.vx *= 0.992; p.vy *= 0.992;
+        if (p.x < -20) p.x = window.innerWidth + 20;
+        if (p.x > window.innerWidth + 20) p.x = -20;
+        if (p.y < -20) p.y = window.innerHeight + 20;
+        if (p.y > window.innerHeight + 20) p.y = -20;
+        ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2); ctx.fillStyle = 'rgba(235,225,211,0.28)'; ctx.fill();
+      }
+      requestAnimationFrame(animateParticles);
+    }
+    window.addEventListener('pointermove', e => { pointer.x = e.clientX; pointer.y = e.clientY; });
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+    animateParticles();
+  </script>
+</body>
+</html>
